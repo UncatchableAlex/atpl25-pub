@@ -42,7 +42,8 @@ bellCorrection n t1 s2 t = (cxAt n s2 t) ∘ (czAt n t1 t)
 
 
 repeater :: Nat -> [Nat] -> [Nat] -> Program
-repeater n sources targets | (length sources) == (length targets) =
+repeater n sources targets 
+    | (length sources) == (length targets) =
         let 
           l = length sources -- trace("repeater "++show (n,sources,targets)) 
           u_bells = [bellAt n a b             | (a,b)   <- zip sources targets]
@@ -108,7 +109,7 @@ multiqubitTeleport n message bell_sources bell_targets = let
 --------------------------------------------------------------------------------
 -- Gate placement
 --------------------------------------------------------------------------------
-hAt :: Int -> Int -> QOp
+hAt :: Int -> Int -> QOp --Apply a Hadamard gate to qubit i in an n-qubit system. 
 hAt n i = Id i ⊗ H ⊗ Id (n-i-1)
 
 cAt :: Int -> QOp  -> Int -> Int -> QOp

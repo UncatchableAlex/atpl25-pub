@@ -55,6 +55,7 @@ library core
       Programs.QFT
       Programs.QuantumAdder
       Programs.RepeaterProtocol
+      Programs.Grovers
 
     build-depends:  
         base,
@@ -103,4 +104,15 @@ executable TestRepeater
       -Wno-missing-signatures
       -Wno-name-shadowing
       -Wno-incomplete-uni-patterns
+
+executable TestGrover
+  import: exe-common
+  main-is: TestGrover.hs
+  build-depends:
+    random
+  ghc-options:
+      -Wno-missing-signatures
+      -Wno-name-shadowing
+      -Wno-incomplete-uni-patterns
+
 

@@ -104,7 +104,7 @@ evalOp op = case op of
   Tensor    op1 op2 -> (evalOp op1)  ⊗  (evalOp op2)
   Compose   op1 op2 | (op_qubits op1 == op_qubits op2) -> (evalOp op1)  ∘  (evalOp op2)  
                     | otherwise -> error $ 
-                     "\n\nDim-mismatch: " ++ showOp op1 ++ " ∘ " ++ showOp op2 ++ "\n"
+                     "\n\nDim-mismatch: " ++ showOp op1 ++ " ∘ " ++ showOp op2 ++ "\n op1 with " ++ show (op_qubits op1) ++ " qubits, op2 with " ++ show (op_qubits op2) ++ " qubits.\n"
   DirectSum op1 op2 | (op_qubits op1 == op_qubits op2) -> (evalOp op1)  <+> (evalOp op2)  
                     | otherwise -> error $ 
                      "\n\nDim-mismatch: " ++ showOp op1 ++ "<+>" ++ showOp op2 ++ "\n"
