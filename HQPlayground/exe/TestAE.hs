@@ -1,7 +1,9 @@
 module Main where
 
 import HQP
-import HQP.QOp.MatrixSemantics as MS
+--import HQP.QOp.MatrixSemantics as Sem
+--import HQP.QOp.StatevectorSemantics as Sem
+import HQP.QOp.StateHmatrixSemantics as Sem
 import System.Random (mkStdGen, randoms)
 import Programs.Grovers (amplitudeEstimation, mcZ, bitsToInt, foldPhase, estimateA)
 
@@ -12,10 +14,10 @@ main = do
     rng0 = randoms (mkStdGen 4) :: [Double]
 
     -- system size
-    n = 4
+    n = 3
 
     -- phase-estimation precision (control qubits)
-    m = 6
+    m = 4
 
     -- Pick a random "marked" solution, like before
     solution = map (fromEnum . (> 0.8)) $ take n rng0
@@ -30,11 +32,15 @@ main = do
     -- Build amplitude estimation program (QPE on Grover Q)
     prog = amplitudeEstimation m n aPrep oracle
 
+  putStr $ "Running Amplitude Estimation with " ++ show (prog_qubits prog) ++ " qubits...\n"
+  --putStr $ "program = " ++ showProgram prog ++ "\n\n"
+
+  let
     -- Start in |0^(m+n)>
     psi0 = ket (replicate (m + n) 0)
 
     -- Run program
-    (_end_state, outcomes, _rng1) = evalProg prog psi0 rng0
+    (_end_state, outcomes, _rng1) = Sem.evalProg prog psi0 rng0
 
     -- outcomes are measurement of control register only (m qubits)
     y   = bitsToInt outcomes

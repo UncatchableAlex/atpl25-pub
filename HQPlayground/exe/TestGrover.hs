@@ -1,7 +1,9 @@
 module Main where
 
 import HQP
-import HQP.QOp.MatrixSemantics as MS
+--import HQP.QOp.MatrixSemantics as Sem
+--import HQP.QOp.StatevectorSemantics as Sem
+import HQP.QOp.StateHmatrixSemantics as Sem
 import System.Random(mkStdGen, randoms)
 import Programs.Grovers (grover, mcZ)     
 
@@ -11,8 +13,8 @@ main = do
     let
         rng0 = randoms (mkStdGen 4) :: [Double]  
 
-        rounds = 5
-        n = 7
+        rounds = 14
+        n = 10
 
         -- what is the "solution?"
         solution = map (fromEnum . (> 0.8)) $ take n rng0 
@@ -28,7 +30,7 @@ main = do
         psi0 = ket (replicate n 0)
 
         -- run our program:
-        (end_state, outcomes,_) = evalProg prog psi0 rng0
+        (end_state, outcomes,_) = Sem.evalProg prog psi0 rng0
 
     --putStr $ "End State: " ++ (show end_state) ++ "\n\n"
     putStr $ "Found solution: " ++ (show (map fromEnum outcomes)) ++ "\n\n"

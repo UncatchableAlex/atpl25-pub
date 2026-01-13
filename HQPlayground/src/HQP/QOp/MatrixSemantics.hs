@@ -104,7 +104,7 @@ evalOp op = case op of
   Tensor    op1 op2 -> (evalOp op1)  ⊗  (evalOp op2)
   Compose   op1 op2 | (op_qubits op1 == op_qubits op2) -> (evalOp op1)  ∘  (evalOp op2)  
                     | otherwise -> error $ 
-                     "\n\nDim-mismatch: " ++ showOp op1 ++ " ∘ " ++ showOp op2 ++ "\n op1 with " ++ show (op_qubits op1) ++ " qubits, op2 with " ++ show (op_qubits op2) ++ " qubits.\n"
+                     "\n\nDim-mismatch: " ++ showOp op1 ++ " ∘ " ++ showOp op2 ++ "\n"
   DirectSum op1 op2 | (op_qubits op1 == op_qubits op2) -> (evalOp op1)  <+> (evalOp op2)  
                     | otherwise -> error $ 
                      "\n\nDim-mismatch: " ++ showOp op1 ++ "<+>" ++ showOp op2 ++ "\n"
@@ -165,6 +165,7 @@ instance HilbertSpace CMat where
     
     (.*) = scale
     (.+) a b = a+b
+    (.-) a b = a-b
 
     -- | inner a b is the usual dot product, with the adjoint coefficients complex conjugated
     inner a b = let 
@@ -201,10 +202,19 @@ measureProjection n k v' = let
     in
         evalOp(Id k) ⊗ p ⊗ evalOp (Id (n-k-1))
 
+-- Automatic conversion to/from CMat for other types
+class CMatable w where
+    toCMat   :: w -> CMat
+    fromCMat :: CMat -> w
+
+instance CMatable CMat where
+    toCMat   = id
+    fromCMat = id
+
 
 -- Auxiliary definitions -- move to internal module?
 tol :: RealT
-tol = 1e-10
+tol = 1e-14
 
 ii, one :: ComplexT
 ii  = 0 :+ 1 

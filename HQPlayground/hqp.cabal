@@ -32,6 +32,7 @@ common common-options
         GeneralizedNewtypeDeriving,
         OverloadedLists,
         DataKinds,
+        UndecidableInstances
 
 library core
     import:   warnings, common-options
@@ -45,7 +46,7 @@ library core
       HQP.QOp.HelperFunctions
       -- HQP Semantics backend implementations:
       HQP.QOp.MatrixSemantics     
-      HQP.QOp.TensorSemantics
+      HQP.QOp.StatevectorSemantics
       HQP.QOp.StabilizerSemantics 
       -- Pretty-printing HQP programs and representations:
       HQP.PrettyPrint
@@ -55,7 +56,6 @@ library core
       Programs.QFT
       Programs.QuantumAdder
       Programs.RepeaterProtocol
-      Programs.Grovers
 
     build-depends:  
         base,
@@ -104,15 +104,4 @@ executable TestRepeater
       -Wno-missing-signatures
       -Wno-name-shadowing
       -Wno-incomplete-uni-patterns
-
-executable TestGrover
-  import: exe-common
-  main-is: TestGrover.hs
-  build-depends:
-    random
-  ghc-options:
-      -Wno-missing-signatures
-      -Wno-name-shadowing
-      -Wno-incomplete-uni-patterns
-
 

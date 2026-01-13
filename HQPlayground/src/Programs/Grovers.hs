@@ -85,10 +85,7 @@ amplitudeEstimation m n a oracle =
     invQFT  = (iqft m) ⊗ (Id n)
   in
     [ Initialize [0..m+n-1] (replicate (m+n) False)
-    , Unitary hCtrl
-    , Unitary prepA
-    , Unitary ctrlPows
-    , Unitary invQFT
+    , Unitary $ cleanop $ hCtrl >: prepA >: ctrlPows >: invQFT
     , Measure [0..m-1]          -- measure control register only
     ]
         
@@ -99,7 +96,7 @@ mcZ n = C (mcZ (n - 1))
 
 iqft :: Int -> QOp
 --iqft m = cleanop (Adjoint (qft m))
-iqft m = Adjoint (qft m)
+iqft m = Adjoint (qftrev m)
 
 -- Q^k (naive composition)
 pow :: Int -> QOp -> QOp
