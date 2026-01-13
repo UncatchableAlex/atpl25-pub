@@ -3,7 +3,7 @@ module Main where
 import HQP
 import HQP.QOp.MatrixSemantics as MS
 import System.Random(mkStdGen, randoms)
-import Programs.Grovers (grover)     
+import Programs.Grovers (grover, mcZ)     
 
 
 main :: IO ()
@@ -33,9 +33,3 @@ main = do
     --putStr $ "End State: " ++ (show end_state) ++ "\n\n"
     putStr $ "Found solution: " ++ (show (map fromEnum outcomes)) ++ "\n\n"
     putStr $ "Actual Solution: " ++ (show $ solution) ++ "\n\n"
-
-
--- Multi-controlled Z: flips sign when all n qubits are |1⟩
-mcZ :: Int -> QOp
-mcZ 1 = Z
-mcZ n = C (mcZ (n - 1))
