@@ -9,7 +9,7 @@ import Programs.Grovers (amplitudeEstimation, mcZ, bitsToInt, foldPhase, estimat
 main :: IO ()
 main = do
   let
-    rng0 = randoms (mkStdGen 2) :: [Double]
+    rng0 = randoms (mkStdGen 4) :: [Double]
 
     -- system size
     n = 4
