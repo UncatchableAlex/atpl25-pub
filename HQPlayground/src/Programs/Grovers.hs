@@ -86,7 +86,7 @@ amplitudeEstimation m n a oracle =
   in
     [ Initialize [0..m+n-1] (replicate (m+n) False)
     , Unitary $ cleanop $ hCtrl >: prepA >: ctrlPows >: invQFT
-    , Measure [0..m-1]          -- measure control register only
+    , Measure [m-1, m-2 .. 0]          -- measure control register with MSB -> LSB
     ]
         
 -- Multi-controlled Z: flips sign when all n qubits are |1⟩
@@ -118,14 +118,7 @@ foldPhase x =
 
 estimateA :: Int -> [Bool] -> Double
 estimateA m outs =
-  let y   = bitsToInt outs
-      phi = fromIntegral y / (2 ^^ m)
-
-      -- option 1: no half shift
-      aNoShift = (sin (pi * foldPhase phi)) ** 2
-
-      -- option 2: with half shift (handles the “-Q” convention)
-      aShift   = (sin (pi * foldPhase (phi - 0.5))) ** 2
-
-  in min aNoShift aShift   -- for your “one marked item” tests, pick the small one
-
+  let y     = bitsToInt outs
+      denom = (2 :: Double) ** fromIntegral m
+      phi   = fromIntegral y / denom
+  in (sin (pi * foldPhase (phi - 0.5))) ** 2 -- with half shift (handles the -Q convention)

@@ -56,6 +56,7 @@ library core
       Programs.QFT
       Programs.QuantumAdder
       Programs.RepeaterProtocol
+      Programs.Grovers
 
     build-depends:  
         base,
@@ -105,3 +106,12 @@ executable TestRepeater
       -Wno-name-shadowing
       -Wno-incomplete-uni-patterns
 
+executable Test2AE
+  import: exe-common
+  main-is: Test2AE.hs
+  build-depends:
+    random
+  ghc-options:
+      -Wno-missing-signatures
+      -Wno-name-shadowing
+      -Wno-incomplete-uni-patterns
