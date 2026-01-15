@@ -95,8 +95,8 @@ mcZ 1 = Z
 mcZ n = C (mcZ (n - 1))
 
 iqft :: Int -> QOp
---iqft m = cleanop (Adjoint (qft m))
-iqft m = Adjoint (qftrev m)
+iqft m = cleanop (Adjoint (qft m))
+--iqft m = Adjoint (qftrev m)
 
 -- Q^k (naive composition)
 pow :: Int -> QOp -> QOp

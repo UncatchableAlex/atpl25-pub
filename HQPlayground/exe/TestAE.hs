@@ -2,8 +2,8 @@ module Main where
 
 import HQP
 --import HQP.QOp.MatrixSemantics as Sem
---import HQP.QOp.StatevectorSemantics as Sem
-import HQP.QOp.StateHmatrixSemantics as Sem
+import HQP.QOp.StatevectorSemantics as Sem
+--import HQP.QOp.StateHmatrixSemantics as Sem
 import System.Random (mkStdGen, randoms)
 import Programs.Grovers (amplitudeEstimation, mcZ, bitsToInt, foldPhase, estimateA)
 
@@ -11,13 +11,13 @@ import Programs.Grovers (amplitudeEstimation, mcZ, bitsToInt, foldPhase, estimat
 main :: IO ()
 main = do
   let
-    rng0 = randoms (mkStdGen 4) :: [Double]
+    rng0 = randoms (mkStdGen 42) :: [Double]
 
     -- system size
-    n = 3
+    n = 4
 
     -- phase-estimation precision (control qubits)
-    m = 4
+    m = 10
 
     -- Pick a random "marked" solution, like before
     solution = map (fromEnum . (> 0.8)) $ take n rng0

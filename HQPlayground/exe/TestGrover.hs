@@ -13,8 +13,8 @@ main = do
     let
         rng0 = randoms (mkStdGen 4) :: [Double]  
 
-        rounds = 14
-        n = 10
+        rounds = 18
+        n = 11
 
         -- what is the "solution?"
         solution = map (fromEnum . (> 0.8)) $ take n rng0 

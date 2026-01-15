@@ -214,7 +214,7 @@ instance CMatable CMat where
 
 -- Auxiliary definitions -- move to internal module?
 tol :: RealT
-tol = 1e-14
+tol = 1e-10
 
 ii, one :: ComplexT
 ii  = 0 :+ 1 
