@@ -1,0 +1,10 @@
+seed=4  n=9  m=8  k=3
+Marked states (as bitstrings): [[1,0,0,1,0,1,0,0,0],[1,1,0,0,1,1,1,0,1],[0,1,0,0,1,0,0,0,0]]
+True a = k/2^n = 5.859375e-3
+AE control bits (as Bool list) = [False,True,True,True,True,False,True,False]
+Estimated aHat = 5.411745017609514e-3
+Grover rounds from aHat: rHat = 10
+Grover rounds from aTrue (for comparison): rTrue = 9
+AE cpu_ms = 440394.384732
+Grover success 20/20
+Grover cpu_ms (all rounds) = 2813.17394
