@@ -94,7 +94,7 @@ runCase seed n m = do
 main :: IO ()
 main = do
   let seeds = [4, 2, 42]
-      ns    = [2, 3, 4]
+      ns    = [3, 4, 5]
       ms    = [5..10]
 
   putStrLn "seed,n,m,solution,y,phi,aHat,absErr,aTrue,cpu_ms"

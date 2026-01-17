@@ -56,7 +56,7 @@ type WorkT    = Array D Ix2 ComplexT
 {-# INLINE make2 #-}
 {-# INLINE view2 #-}
 {-# INLINE backpermute2 #-}
-tol = 1e-12
+tol = 1e-10
 
 -- | Backend API
 -- | makeArray-like builder and element lookup
