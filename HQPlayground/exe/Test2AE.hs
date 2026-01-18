@@ -48,7 +48,7 @@ runCase seed n m = do
       oracle   = mkOracle n solution
       aPrep    = mkAPrep n
       prog     = amplitudeEstimation m n aPrep oracle
-      psi0     = ket (replicate (m + n) 0)
+      psi0     = ket (replicate (m + n) 0) -- this represents |0^(m+n)>
 
       (_endState, outs, _rng1) = Sem.evalProg prog psi0 simRng
 

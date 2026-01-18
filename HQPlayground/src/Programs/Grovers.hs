@@ -58,23 +58,6 @@ amplitudeEstimation m n a oracle =
     -- Grover iterate Q (this is what QPE estimates the phase of)
     q       = gDiff ∘ oracle
 
-    -- -- starting state 
-    -- bigA = (foldr (⊗) One (replicate n H))
-
-    -- xAll = (foldr (⊗) One (replicate n X))    
-
-    -- -- phase flip on the zero vector
-    -- sZero = xAll ∘ (mcZ n) ∘ xAll 
-    
-    -- -- our oracle operator
-    -- sx = oracle  
-
-    -- -- magical diffusion operation
-    -- gdiffusion = bigA ∘ sZero ∘ bigA
-    
-    -- -- Apply the oracle to our vector of length n, then apply the grover diffusion operator
-    -- q = gdiffusion ∘ sx
-
     -- gates on full register (m control + n system)
     hCtrl   = (foldr (⊗) One (replicate m H)) ⊗ (Id n)
     prepA   = (Id m) ⊗ a
