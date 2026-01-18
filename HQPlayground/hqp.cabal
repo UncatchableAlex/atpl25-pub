@@ -106,6 +106,26 @@ executable TestRepeater
       -Wno-name-shadowing
       -Wno-incomplete-uni-patterns
 
+executable TestGrover
+  import: exe-common
+  main-is: TestGrover.hs
+  build-depends:
+    random
+  ghc-options:
+      -Wno-missing-signatures
+      -Wno-name-shadowing
+      -Wno-incomplete-uni-patterns
+
+executable TestAE
+  import: exe-common
+  main-is: TestAE.hs
+  build-depends:
+    random
+  ghc-options:
+      -Wno-missing-signatures
+      -Wno-name-shadowing
+      -Wno-incomplete-uni-patterns
+
 executable Test2AE
   import: exe-common
   main-is: Test2AE.hs
