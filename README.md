@@ -1,177 +1,112 @@
-# ATPL/HQP Haskell Framework v3
 
-## A few updates from v2 to Syntax.hs:
+# Amplitude Estimation & Grover (HQP / Haskell)
 
-0. The program Step data type now includes Initialize:
-   ```haskell
-   data Step
-   = Unitary QOp             -- A unitary quantum program
-   | Initialize [Int] [Bool] -- Initialize qubits qs to classical values vs.
-   | Measure    [Int]        -- Projective measurement of qubits qs
-   ```
-   
-   Initialize can be implemented by measuring and correcting; but in particular for ZX calculus backends, you want to have Initialize as a distinct operation.
+## Overview
+This project implements **Grover’s algorithm (amplitude amplification)** and **Quantum Amplitude Estimation (AE)** in **Haskell** using the **HQP framework**. We extended HQP with our own program module and several executable test drivers.
 
-   The unitary operator QOp syntax is:
-   ```haskell
-    data QOp 
-    = Id Int -- Identity n: C^{2^n} -> C^{2^n} is the n-qubit identity operator.
-           -- Identity 0: C^1 -> C^1 scalar multiplication by 1, unit for ⊗. 
-           -- Identity 1 = I: C^2 -> C^2
-           -- Identity n is the family of units for ∘.                 
-    | Phase Rational -- Global phase e^{i π θ} (scalar multiplication)
-    | X | Y | Z | H | SX
-    | R QOp Rational  -- Rotation around (possibly multi-qubit) axis defined by QOp by angle (in units of π)
-    | C QOp           -- Controlled (possibly multi-qubit) operator
-    | Permute [Int]     -- k-qubit operator (k=length qs) with wire reordering of the k qubits.
-    | Tensor    QOp QOp -- (m+n)-qubit tensor product A ⊗ B if A,B are m-qubit resp. n-qubit operators
-    | DirectSum QOp QOp -- Unitary branching: A <+> B = |0><0|A + |1><1|B = 'if q0 then A else B'
-    | Compose   QOp QOp -- Sequential composition A ∘ B (first apply B, then A)
-    | Adjoint QOp 
-   ```
-   with changes detailed below. Qubit numbers in Permute are relative, e.g.
-   ```haskell
-      Id 2 ⊗ Permute [2,0,1] ≡ Permute [0,1,4,2,3]
-   ```
-   Thus no reordering is needed when combined through tensor products, direct sums, or control. 
+We initially used HQP’s *matrix semantics*, but switched to the *state vector semantics* after an HQP update, because it applies quantum operations lazily to a state vector and allowed us to run experiments with a higher number of qubits. The only change we made to the framework code was adjusting the simulator tolerance from `1e-12` to `1e-10`, since AE circuits become deep (controlled powers `Q^(2^j)` + inverse QFT) and floating-point round-off noise started causing issues at higher qubit counts.
 
-1. Angles are now Rational numbers given in units of π. E.g. R Z θ = e^{-iπθ/2}|0><0| + e^{iπθ/2}|1><1|. 
-   This makes it much easier to read QOp expressions.
+## Project structure
+We used the HQP framework and extended it with:
 
-2. Replaced 'One' (0-qubit identity, neutral element for ⊗) by more general Phase θ (scalar multiplication by e^{iθπ}).
-   One = Phase 0 is a 'pattern' rule instead of its own constructor. Pattern rules can still be used both as constructors and in pattern matching rules.
+- `src/HQP/Programs/Grovers.hs`  
+  Contains our **Grover** and **Amplitude Estimation** implementations, plus helper functions.
 
-   While the v2 QOp definition was already complete (every n-qubit unitary could be specified), Phase θ is needed for many transformation rules in e.g. Stabilizer algebra and ZX algebra implementations.
+Executables (tests/benchmarks):
 
-   Note that while global phases are not measurable, a global phase e^{iθπ}A becomes relative when controlled:
+- `exe/TestGrover.hs` — Grover test
+- `exe/TestAE.hs` — initial AE test
+- `exe/Test2AE.hs` — AE benchmark sweep over multiple seeds, `n`, and `m` (outputs CSV)
+- `exe/TestIntegration.hs` — full pipeline test: AE -> estimate optimal Grover rounds -> run Grover (supports multiple marked solutions)
 
-    C (e^{iθπ} A) = (R Z θ ⊗ I) ∘ C A
+## Requirements / Dependencies
 
- 3. Identity gate I is replaced by the more general n-qubit identity 'Id n'. This makes it much easier to 1) construct
-    operators that act on specific qubits (instead of repeated I⊗I⊗ ⋯ ⊗I), and 2) to recognize on which qubits operators act nontrivially, and 3) avoids a lot of clutter in the QOp representations. This makes implementing ZX and Stabilizers easier, as well as programming quantum algorithms.
+### Haskell / HQP
+- **GHC** (Haskell compiler)
+- **Cabal** (build tool)
+- HQP project dependencies as specified in the `.cabal` file
 
-    Example:
-   ```haskell
-    atQubit n k g = Id k ⊗ g ⊗ Id (n-k-1) -- Produces the n-qubit operator with 1-qubit gate g acting on qubit k.
-   ```
-   
-   Some syntactic shorthand for qubit placement have been added: 
+> Note: If you see build errors related to BLAS/LAPACK (e.g., through `hmatrix`), you may need to install system BLAS/LAPACK development libraries. The package names depend on your OS/distribution.
 
-   ```haskell
-      k <@ op      = Id k ⊗ op         -- place at qubit k
-           op @> l = op ⊗ Id l         -- extend to l additional qubits
-      k <@ op @> l = Id k ⊗ op Id l  -- (k+l+1)-qubit operator that acts on qubit k
-   ```
- 
- 4. To make it easy to work with your semantics backends using the same syntax as for QOp, we define a number of 
-    traits-typeclasses HasX that you can use if your semantics data type implements them:
+### Python analysis (plots + CSV processing)
+We created a **Jupyter Notebook** (`analysis.ipynb`) to run our Python analysis script for the CSV output (plots for runtime/error vs `m`, etc.).
 
-   ```haskell
-   class HasTensorProduct o where
-      (<.>) :: o -> o -> o -- ASCII infix tensor product operator
-      (⊗)   :: o -> o -> o -- Unicode synonym      
-      (⊗) = (<.>) 
 
-   class HasDirectSum o where
-      (<+>) :: o -> o -> o -- ASCII direct sum infix operator
-      (⊕)   :: o -> o -> o -- Unicode synonym
-      (⊕) = (<+>) -- 
+- **Python 3.13**
+- Libraries:
+  - `numpy`
+  - `pandas`
+  - `matplotlib`
 
-   class HasAdjoint o where adj :: o -> o
-   class HasQubits  o where n_qubits :: o -> Nat
-   
-   ```
-   This makes it possible to write code that works with different backends without modification. However, not all backends support all operations - e.g. Stabilizers don't support direct sum or linear combinations.
-   
-   To equip your data type with these operations, write something like:
+## Build instructions (Haskell)
+From the project root:
 
-   ```haskell
-   instance HasTensorProduct QOp where (⊗) = Tensor
-   instance HasDirectSum QOp     where (⊕) = DirectSum
-   instance HasAdjoint QOp       where adj = Adjoint
-   instance HasQubits  QOp       where n_qubits = op_qubits
-   instance Semigroup QOp where (<>) = Compose
-   instance Operator QOp
-   ```
+```bash
+cabal update
+cabal build
+````
 
-## Change to the semantics backend interface: 
+To build a specific executable:
 
-evalOp is unchanged, but the evalStep and evalProg are updated to include measurement outcomes. In summary, a semantics backend must define:
-
-```haskell
-type StateT = ... -- Representation of states, e.g. vector, stabilizer tableau, tensors, ...
-type OpT    = ... -- Representation of operators, e.g. matrix, haskell function StateT -> StateT, ...
-evalStep :: (StateT, Outcomes, RNG) -> Step -> (StateT, Outcomes, RNG)
-```
-where 
-```haskell
-type Outcomes = [Bool]   -- Outcomes in stack order (latest measurement is head of list)
-type RNG      = [Double] -- Random number generator (just an indinite list of numbers 0..1)
+```bash
+cabal build TestGrover
+cabal build TestAE
+cabal build Test2AE
+cabal build TestIntegration
 ```
 
-This makes program evaluation a simple fold of evalStep over the program:
-```haskell
-evalProg :: Program -> StateT -> RNG -> (StateT, Outcomes, RNG)
-evalProg steps psi0 rng0 = foldl evalStep (psi0, [], rng0) steps
-```
-See ```MatrixSemantics.hs``` for an example implemenation of evalStep. You own backend can use the same implementation almost verbatim: you just need to define 
+## Run instructions (Haskell)
 
-```haskell
-evalOp   :: QOp -> OpT                                                -- A ↦ [[A]]
-measure1 :: (StateT, Outcomes, RNG) -> Nat -> (StateT, Outcomes, RNG) -- measure single qubit and prepend to outcomes
-apply :: OpT -> StateT -> StateT                                      -- (A,ψ) ↦ [[A ψ]]
-ket   :: [Int] -> StateT                                              -- Build basis state: [a1,...,an] ↦ |a1,...,an>
-```
-Note that evalOp does not need to evaluate to a full representation of the operator, if your semantics backend data type does not easily allow that. It's totally fine to just build a lambda (i.e. delayed evaluation), so long as you can
-later apply it to a ```StateT``` using ```apply```.
+Run executables using:
 
-## New quantum programs in src/Programs/:
-
-1. ```RepeaterProtocol.hs```: New application program for testing Clifford backends
-
-In order to benchmark and test Stabilizer implementations, I've written a quantum communication program that can generate useful workloads consisting only of Clifford operations, and which can scale to arbitrarily large numbers of qubits and operations. 
-
-The program implements the Repeater Protocol, which, given a sequence of qubits located as pair-wise neighbours, linking a sender and receiver, sets up Bell pairs that allow for later teleporting full quantum states directly from sender to receiver. 
-
-```src/Programs/RepeaterProtocol.hs``` implements this, both for constructing the remote Bell pair (split between sender and receiver) and subsequent teleportation. Functions for both single qubit transmission and for multi-qubit transmission are exported. 
-
-```exe/TestRepeater.hs``` is a test of multi-qubit repeater protocol and multi-qubit teleportation, transmitting a length-2^m message, using amplitudes of 0,1,2,...,2^m-1 (normalized) as a simple example. You can test it currently using the (very slow!) MatrixSemantics backend, and plug in your Stabilizer backend or ZX backend to verify correctness and benchmark.
-
-2. ```QuantumAdder.hs``` Example of quantum arithmetic using QFT. This shows how to use the basis kets as binary integers mod 2^n, and how to perform constant addition to all of them (mod 2^n, so addition becomes a permutation of the basis states), as well as how to add another qubit register to all 2^n basis kets (producing an m+n-qubit entangled state |x> ⊗ |y> ↦ |x> ⊗ |x+y mod 2^n>). This can be extended to define multipliation and further arithmetic operations.
-
-3. ```QFT.hs```, the Quantum Fourier Transform implementation, has been simplified. 
-
-## HelperFunctions.hs and Simplify.hs: Helper functions for program transformations 
-
-I've added several helper functions that can make life easier for those of you working on semantics backends or otherwise need to manipulate QOp programs. Have a look if anything below solves some of your problems, and consider putting in a request for a missing helper function if you have an un-scratched itch. 
-
-1. ```op_support:: QOp -> Set Int``` Computes the set of qubits (local indexing) on which an operator acts nontrivially.
-
-2. Apply a list of rewrite rules repeatedly until a fixpoint is reached, but at most n iterations.
-```haskell
-simplifyFixpoint :: Eq o => Int -> [o -> o] -> o -> o
-simplifyFixpoint n rewriterules op = fixpoint n (simplifyPass rewriterules) op  
+```bash
+cabal run TestGrover
+cabal run TestAE
+cabal run Test2AE
+cabal run TestIntegration
 ```
 
-2. Use algebraic rules to lift composes to the top (compositions of tensor products) or push down (tensor products of compositions) instead of a mixed tree. It can be quite useful to have operators in one of these forms when generating e.g. Stabilizer code.
+## Running tests: Cabal vs GHCi
+We initially ran the tests inside **GHCi**, but we found they were noticeably faster when compiled and executed via **Cabal**. Because of this, we updated the `hqp.cabal` file to expose our `HQP.Programs.Grovers` module and to include the test executables.
 
-```pushComposes :: QOp -> QOp```
-```liftComposes :: QOp -> QOp```
+### Recommended (faster): build + run with Cabal
+```bash
+cabal build TestGrover
+cabal run TestGrover
+````
 
-3. Use associativity to turn ```Compose (Compose ( Compose( ... )))``` and ```Tensor( Tensor ( Tensor( ... )))``` 
-into flat lists:
-```haskell
-assocComposes :: QOp -> [QOp]
-assocComposes (Compose a b) = assocComposes a ++ assocComposes b
-assocComposes op          = [op]
+### Interactive (slower): run from GHCi
 
-assocTensors :: QOp -> [QOp]
-assocTensors (Tensor a b) = assocTensors a ++ assocTensors b
-assocTensors op          = [op]
+```bash
+cabal repl
 ```
 
-4. General clean-up of QOp expressions using whatever simplification operations are implemented. Presently:
-```haskell
-cleanop :: QOp -> QOp
-cleanop = simplifyFixpoint 10000 [cleanOnes, cleanAdjoints, liftComposes,doComposes, pushComposes]
+Then inside GHCi you can load a test file, for example:
+
+```text
+:l exe/TestGrover.hs
 ```
+
+You can do the same for the other tests:
+
+* `:l exe/TestAE.hs`
+* `:l exe/Test2AE.hs`
+* `:l exe/TestIntegration.hs`
+
+
+### AE benchmark output (CSV)
+
+This is how we generated the results CSV used for plots:
+
+```bash
+cabal build Test2AE
+cabal run Test2AE -- > results.csv
+```
+
+The CSV includes columns such as: seed, `n`, `m`, marked solution, measured `y`/`phi`, estimated `aHat`, absolute error, true `a`, and CPU time.
+
+## Notes
+
+* Runtime grows very quickly with qubit count because the simulator state size is `2^(m+n)` and AE uses controlled powers up to `Q^(2^(m-1))`.
+* The simulator tolerance was relaxed from `1e-12` to `1e-10` to avoid instability from accumulated floating-point noise in deeper AE circuits.
+
